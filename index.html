@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Socket.IO chat</title>
+</head>
+
+<body>
+  <div id="login">
+    <form action="" id="login-form">
+      <input type="text" placeholder="Nick name" id="nickname" />
+      <input type="submit" value="login" />
+    </form>
+  </div>
+  <div id="main">
+    <ul id="messages"></ul>
+    <form action="" id="send-message-form">
+      <input id="message-input" autocomplete="off" /><button>Send</button>
+    </form>
+  </div>
+  <div id="user-list"></div>
+</body>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<script>
+  $(function () {
+    var socket = io();
+
+    var blockLogin = $("#login");
+    var blockMessages = $("#main");
+    var userList = $("#user-list");
+    var loginForm = $("#login-form");
+    var nickName = $("#nickname");
+    var messageForm = $('#send-message-form');
+    var messageInput = $('#message-input');
+    var messageBlock = $('#messages');
+
+    blockLogin.show();
+    userList.hide();
+    blockMessages.hide();
+
+    loginForm.submit(function (e) {
+      e.preventDefault();
+      socket.emit('new user', nickName.val(), function (data) {
+        if (data) {
+          blockLogin.hide();
+          blockMessages.show();
+          userList.show();
+        }
+      });
+    })
+
+    socket.on('userlist', function (data) {
+      var html = '';
+      for (let i = 0; i < data.length; i++) {
+        html += data[i] + '<br />';
+      }
+
+      userList.html(html);
+    });
+
+    messageForm.submit(function (e) {
+      e.preventDefault();
+      socket.emit('chat message', messageInput.val());
+      messageInput.val('');
+      return false;
+    });
+    socket.on('chat message', function (msg) {
+      messageBlock.append($('<li>').text(msg));
+    });
+  });
+
+</script>
+
+</html>
